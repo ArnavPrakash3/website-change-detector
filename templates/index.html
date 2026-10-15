@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · Website Change Detector{% endblock %}
+{% block content %}
+<section class="hero">
+  <div><p class="eyebrow">MONITORING DASHBOARD</p><h1>Know when a website changes.</h1><p class="subhead">Track public pages, keep a version history, and spot meaningful text changes.</p></div>
+  <div class="hero-stat"><strong>{{ monitors|length }}</strong><span>active monitors</span></div>
+</section>
+<section class="panel">
+  <div class="section-heading"><div><p class="eyebrow">GET STARTED</p><h2>Add a page to monitor</h2></div></div>
+  <form action="{{ url_for('add_monitor') }}" method="post" class="add-form">
+    <label>Monitor name<input name="name" required maxlength="120" placeholder="e.g. VIT notices"></label>
+    <label>Public page URL<input name="url" type="url" required placeholder="https://example.com/notices"></label>
+    <div class="form-row">
+      <label>Check interval<select name="interval"><option value="15">Every 15 minutes</option><option value="30">Every 30 minutes</option><option value="60" selected>Every hour</option><option value="360">Every 6 hours</option><option value="720">Every 12 hours</option><option value="1440">Every 24 hours</option></select></label>
+      <label>Sensitivity<select name="sensitivity"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option></select></label>
+    </div>
+    <label>Ignore CSS selectors <span class="muted">(optional, one per line)</span><textarea name="ignore_selectors" rows="2" placeholder=".timestamp&#10;.ad-banner"></textarea></label>
+    <button class="primary" type="submit">＋ Add monitor</button>
+  </form>
+</section>
+<section class="list-section">
+  <div class="section-heading"><div><p class="eyebrow">YOUR PAGES</p><h2>Monitors</h2></div><span class="muted">{{ monitors|length }} total</span></div>
+  {% if not monitors %}
+    <div class="empty"><div class="empty-icon">⌁</div><h3>No monitors yet</h3><p>Add a public URL above to capture its first snapshot.</p></div>
+  {% else %}
+    <div class="monitor-grid">
+    {% for m in monitors %}
+      <article class="monitor-card">
+        <div class="card-top"><span class="status status-{{ m.status|lower }}">{{ m.status }}</span><span class="interval">Every {{ m.interval_minutes }} min</span></div>
+        <h3><a href="{{ url_for('detail', monitor_id=m.id) }}">{{ m.name }}</a></h3>
+        <a class="url" href="{{ m.url }}" target="_blank" rel="noopener noreferrer">{{ m.url }}</a>
+        {% if m.last_error %}<p class="error-text">{{ m.last_error }}</p>{% endif %}
+        <div class="meta"><span>Last checked<br><strong>{{ m.last_checked.strftime('%d %b %H:%M UTC') if m.last_checked else 'Not yet' }}</strong></span><span>Last changed<br><strong>{{ m.last_changed.strftime('%d %b %H:%M UTC') if m.last_changed else 'No change yet' }}</strong></span></div>
+        <div class="card-actions"><a class="secondary" href="{{ url_for('detail', monitor_id=m.id) }}">View history →</a><form action="{{ url_for('check_now', monitor_id=m.id) }}" method="post"><button class="small-button" type="submit">Check now</button></form></div>
+      </article>
+    {% endfor %}
+    </div>
+  {% endif %}
+</section>
+<section class="feature-strip">
+  <div><span>01</span><strong>Snapshot history</strong><p>Keep a record of unique page versions.</p></div>
+  <div><span>02</span><strong>Noise reduction</strong><p>Remove scripts, styles, timestamps and ignored selectors.</p></div>
+  <div><span>03</span><strong>Change alerts</strong><p>Optional webhook notifications for detected changes.</p></div>
+</section>
+{% endblock %}

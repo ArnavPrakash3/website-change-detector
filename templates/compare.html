@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Compare versions · {{ monitor.name }}{% endblock %}
+{% block content %}
+<a class="back" href="{{ url_for('detail', monitor_id=monitor.id) }}">← Back to {{ monitor.name }}</a>
+<section class="hero"><div><p class="eyebrow">VERSION COMPARISON</p><h1>Version {{ old.id }} vs {{ new.id }}</h1><p class="subhead">{{ old.created_at.strftime('%d %b %Y %H:%M UTC') }} → {{ new.created_at.strftime('%d %b %Y %H:%M UTC') }}</p></div></section>
+<section class="panel"><h2>Text diff</h2><pre class="text-diff">{{ diff if diff else 'No text differences.' }}</pre></section>
+{% endblock %}

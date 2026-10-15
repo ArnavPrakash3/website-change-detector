@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}{{ monitor.name }} · Website Change Detector{% endblock %}
+{% block content %}
+<a class="back" href="{{ url_for('index') }}">← Back to dashboard</a>
+<section class="detail-hero">
+  <div><p class="eyebrow">MONITOR DETAILS</p><h1>{{ monitor.name }}</h1><a class="url" href="{{ monitor.url }}" target="_blank" rel="noopener noreferrer">{{ monitor.url }}</a></div>
+  <form action="{{ url_for('check_now', monitor_id=monitor.id) }}" method="post"><button class="primary" type="submit">↻ Check now</button></form>
+</section>
+<div class="detail-stats">
+  <div class="stat-card"><span>Status</span><strong><span class="status status-{{ monitor.status|lower }}">{{ monitor.status }}</span></strong></div>
+  <div class="stat-card"><span>Interval</span><strong>{{ monitor.interval_minutes }} minutes</strong></div>
+  <div class="stat-card"><span>Versions saved</span><strong>{{ snapshots|length }}</strong></div>
+  <div class="stat-card"><span>Last changed</span><strong>{{ monitor.last_changed.strftime('%d %b %Y %H:%M UTC') if monitor.last_changed else '—' }}</strong></div>
+</div>
+{% if monitor.last_error %}<div class="flash error">{{ monitor.last_error }}</div>{% endif %}
+<section class="panel">
+  <div class="section-heading"><div><p class="eyebrow">CHANGE REVIEW</p><h2>Latest version comparison</h2></div></div>
+  {% if diff_html %}<div class="diff-wrap">{{ diff_html|safe }}</div>{% else %}<div class="empty compact"><p>At least two different snapshots are needed to show a diff. Click “Check now” after the page changes.</p></div>{% endif %}
+</section>
+<section class="panel">
+  <div class="section-heading"><div><p class="eyebrow">TIMELINE</p><h2>Version history</h2></div></div>
+  {% if snapshots %}
+  <div class="timeline">
+    {% for s in snapshots %}
+    <article class="version-row">
+      <div class="version-icon">{{ loop.index }}</div><div class="version-info"><strong>Version {{ s.id }}</strong><span>{{ s.created_at.strftime('%d %b %Y · %H:%M:%S UTC') }}</span><code>{{ s.content_hash[:16] }}…</code></div>
+      <details><summary>View captured text</summary><p class="snapshot-text">{{ s.text_content }}</p></details>
+      {% if not loop.last %}<a class="secondary" href="{{ url_for('compare', monitor_id=monitor.id, old_id=snapshots[loop.index].id, new_id=s.id) }}">Compare with previous →</a>{% endif %}
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}<p class="muted">No snapshots saved yet.</p>{% endif %}
+</section>
+<section class="danger-zone"><div><strong>Remove this monitor</strong><p>This permanently deletes its saved version history.</p></div><form action="{{ url_for('delete_monitor', monitor_id=monitor.id) }}" method="post" onsubmit="return confirm('Delete this monitor and all snapshots?')"><button class="danger" type="submit">Delete monitor</button></form></section>
+{% endblock %}
